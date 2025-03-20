@@ -104,7 +104,12 @@ function Scoreboard() {
           </Link>
         )
       },
-      { Header: 'Score', accessor: 'score' },
+      {
+        Header: 'Score',
+        accessor: 'score',
+        // Sort by score in descending order (highest first)
+        sortDescFirst: true
+      },
     ],
     []
   );
@@ -112,10 +117,12 @@ function Scoreboard() {
   // FIXED: Move useMemo before any conditional returns
   const scoreboardArray = useMemo(() => {
     if (!scoreboardData || typeof scoreboardData !== 'object') return [];
-    return Object.entries(scoreboardData).map(([entrantName, stats]) => ({
-      entrantName,
-      score: stats.score || 0,
-    }));
+    return Object.entries(scoreboardData)
+      .map(([entrantName, stats]) => ({
+        entrantName,
+        score: stats.score || 0,
+      }))
+      .sort((a, b) => b.score - a.score); // Sort by score in descending order
   }, [scoreboardData]);
 
   // Conditional rendering after hooks
@@ -182,7 +189,7 @@ function EntrantDetail() {
         <Link to="/">← Back to Scoreboard</Link>
       </nav>
 
-      <h1>Player Data: {entrantName}</h1>
+      <h1>Players: {entrantName}</h1>
       <Table columns={columns} data={dataArray} />
 
       <h2>Points & Points Multiplier Chart</h2>
