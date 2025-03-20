@@ -45,15 +45,27 @@ function Table({ columns, data }) {
       <tbody {...getTableBodyProps()}>
         {rows.map(row => {
           prepareRow(row);
+          // Check if this player hasn't played yet
+          const notPlayedYet = row.original.pts === 'Not played yet';
+
           return (
-            <tr {...row.getRowProps()} key={row.id}>
+            <tr
+              {...row.getRowProps()}
+              key={row.id}
+              style={{
+                // backgroundColor: notPlayedYet ? 'rgba(232, 232, 232, 0.57)' : 'white',
+                opacity: notPlayedYet ? 0.3 : 1,
+                // color: notPlayedYet ? '#999999' : 'black',
+              }}
+            >
               {row.cells.map(cell => (
                 <td
                   {...cell.getCellProps()}
                   key={cell.column.id}
                   style={{
                     padding: '8px',
-                    border: 'solid 1px #ddd'
+                    border: 'solid 1px #ddd',
+                    fontStyle: notPlayedYet ? 'italic' : 'normal',
                   }}
                 >
                   {cell.render('Cell')}
@@ -95,7 +107,7 @@ function Scoreboard() {
   const columns = useMemo(
     () => [
       {
-        Header: 'Entrant Name',
+        Header: 'Guy (click for details)',
         accessor: 'entrantName',
         // Custom cell renderer to make the entrant name a clickable link
         Cell: ({ value }) => (
@@ -110,6 +122,10 @@ function Scoreboard() {
         // Sort by score in descending order (highest first)
         sortDescFirst: true
       },
+      {
+        Header: "Multiplier Sum",
+        accessor: 'sum_multiplier',
+      }
     ],
     []
   );
@@ -121,6 +137,7 @@ function Scoreboard() {
       .map(([entrantName, stats]) => ({
         entrantName,
         score: stats.score || 0,
+        sum_multiplier: stats.sum_multiplier || 0
       }))
       .sort((a, b) => b.score - a.score); // Sort by score in descending order
   }, [scoreboardData]);
@@ -155,7 +172,10 @@ function EntrantDetail() {
       .then(jsonData => {
         const arrayData = Object.entries(jsonData).map(([name, info]) => ({
           name,
-          pts: info.pts[0],
+          // Create a shorter name version for with first initial and last name
+          // e.g., "John Doe" becomes "J. Doe"
+          shortName: `${name.split(' ')[0][0]}. ${name.split(' ').slice(1).join(' ')}`,
+          pts: info.pts == 'Not played yet' ? 'Not played yet' : info.pts.reduce((total, current) => total + current, 0),
           pts_mult: info.pts_mult,
           seed: info.seed,
           team: info.team
@@ -194,20 +214,36 @@ function EntrantDetail() {
 
       <h2>Points & Points Multiplier Chart</h2>
       <BarChart
-        width={800}
-        height={400}
+        width={window.innerWidth - 50}
+        height={600}
         data={dataArray}
         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" tick={{ fontSize: 8 }} />
+        <XAxis
+          dataKey="shortName" // Use shortened names
+          tick={{
+            fontSize: 10,
+            angle: -45, // Rotate labels 45 degrees
+            textAnchor: 'end', // Align text properly when rotated
+            dy: 10 // Add some vertical offset
+          }}
+          height={100} // Give more space for the rotated labels
+        />
         <YAxis />
-        <Tooltip />
+        <Tooltip
+          formatter={(value, name) => [value, name]}
+          labelFormatter={(label, items) => {
+            // Find the original full name from the data
+            const original = dataArray.find(item => item.shortName === label);
+            return original ? original.name : label;
+          }}
+        />
         <Legend />
         <Bar dataKey="pts" name="Points" fill="#8884d8" />
         <Bar dataKey="pts_mult" name="Points w/ Multiplier" fill="#82ca9d" />
       </BarChart>
-    </div>
+    </div >
   );
 }
 
