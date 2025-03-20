@@ -125,6 +125,11 @@ function Scoreboard() {
       {
         Header: "Multiplier Sum",
         accessor: 'sum_multiplier',
+      },
+      {
+        Header: "Players Alive",
+        accessor: 'alive_count',
+
       }
     ],
     []
@@ -137,7 +142,8 @@ function Scoreboard() {
       .map(([entrantName, stats]) => ({
         entrantName,
         score: stats.score || 0,
-        sum_multiplier: stats.sum_multiplier || 0
+        sum_multiplier: stats.sum_multiplier || 0,
+        alive_count: stats.alive_count || 0,
       }))
       .sort((a, b) => b.score - a.score); // Sort by score in descending order
   }, [scoreboardData]);
@@ -175,7 +181,7 @@ function EntrantDetail() {
           // Create a shorter name version for with first initial and last name
           // e.g., "John Doe" becomes "J. Doe"
           shortName: `${name.split(' ')[0][0]}. ${name.split(' ').slice(1).join(' ')}`,
-          pts: info.pts == 'Not played yet' ? 'Not played yet' : info.pts.reduce((total, current) => total + current, 0),
+          pts: info.pts === 'Not played yet' ? 'Not played yet' : info.pts.reduce((total, current) => total + current, 0),
           pts_mult: info.pts_mult,
           seed: info.seed,
           team: info.team
