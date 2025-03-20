@@ -121,7 +121,7 @@ function Dashboard() {
   useEffect(() => {
     // Fetch data from localhost if running locally
     // Otherwise, fetch from the deployed URL
-    fetch('https://mm-pp-app.onrender.com/entrant/zsg') // Replace with your API URL
+    fetch('https://mm-pp-app.onrender.com/pk/entrant/gotti') // Replace with your API URL
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
