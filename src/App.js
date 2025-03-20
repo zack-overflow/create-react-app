@@ -1,50 +1,6 @@
-// import React, { Component } from 'react';
-// import logo from './logo.svg';
-// import './App.css';
-
-// class App extends Component {
-//   render() {
-//     return (
-//       <div className="App">
-//         <header className="App-header">
-//           <img src={logo} className="App-logo" alt="logo" />
-//           <p>
-//             Hello from Render!
-//           </p>
-//           <a
-//             className="App-link"
-//             href="https://reactjs.org"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             Learn React
-//           </a>
-//         </header>
-//       </div>
-//     );
-//   }
-// }
-
-// export default App;
-
-// const rawData = {
-//   "BJ DAVIS": {
-//     "pts": [9],
-//     "pts_mult": 18,
-//     "seed": "11",
-//     "team": "San Diego State Aztecs"
-//   },
-//   "BOBBY ROSENBERGER": {
-//     "pts": [0],
-//     "pts_mult": 0,
-//     "seed": "16",
-//     "team": "St. Francis (PA) Red Flash"
-//   },
-//   // ... rest of your data
-// };
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTable } from 'react-table';
+import { BrowserRouter as Router, Routes, Route, Link, useParams } from 'react-router-dom';
 import {
   BarChart,
   Bar,
@@ -111,17 +67,78 @@ function Table({ columns, data }) {
   );
 }
 
-function Dashboard() {
-  // State to hold fetched data
+// Scoreboard component that will be shown at the root route
+function Scoreboard() {
+  const [scoreboardData, setScoreboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch('https://mm-pp-app.onrender.com/pk/scoreboard')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setScoreboardData(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err);
+        setLoading(false);
+      });
+  }, []);
+
+  // Define columns for scoreboard table with a link in the entrant name column
+  const columns = useMemo(
+    () => [
+      {
+        Header: 'Entrant Name',
+        accessor: 'entrantName',
+        // Custom cell renderer to make the entrant name a clickable link
+        Cell: ({ value }) => (
+          <Link to={`/entrant/${value}`} style={{ textDecoration: 'underline', color: 'blue' }}>
+            {value}
+          </Link>
+        )
+      },
+      { Header: 'Score', accessor: 'score' },
+    ],
+    []
+  );
+
+  // FIXED: Move useMemo before any conditional returns
+  const scoreboardArray = useMemo(() => {
+    if (!scoreboardData || typeof scoreboardData !== 'object') return [];
+    return Object.entries(scoreboardData).map(([entrantName, stats]) => ({
+      entrantName,
+      score: stats.score || 0,
+    }));
+  }, [scoreboardData]);
+
+  // Conditional rendering after hooks
+  if (loading) return <div>Loading scoreboard...</div>;
+  if (error) return <div>Error loading scoreboard: {error.message}</div>;
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>March Madness Scoreboard</h1>
+      <Table columns={columns} data={scoreboardArray} />
+    </div>
+  );
+}
+
+// Updated Dashboard component to accept an entrant parameter from URL
+function EntrantDetail() {
+  const { entrantName } = useParams(); // Get entrant name from URL params
   const [dataArray, setDataArray] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch data on component mount
   useEffect(() => {
-    // Fetch data from localhost if running locally
-    // Otherwise, fetch from the deployed URL
-    fetch('https://mm-pp-app.onrender.com/pk/entrant/gotti') // Replace with your API URL
+    fetch(`https://mm-pp-app.onrender.com/pk/entrant/${entrantName}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -129,7 +146,6 @@ function Dashboard() {
         return response.json();
       })
       .then(jsonData => {
-        // Convert the received JSON into an array format
         const arrayData = Object.entries(jsonData).map(([name, info]) => ({
           name,
           pts: info.pts[0],
@@ -144,9 +160,8 @@ function Dashboard() {
         setError(err);
         setLoading(false);
       });
-  }, []);
+  }, [entrantName]);
 
-  // Define columns for react-table using useMemo inside the component
   const columns = useMemo(
     () => [
       { Header: 'Name', accessor: 'name' },
@@ -163,7 +178,11 @@ function Dashboard() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Player Data</h1>
+      <nav style={{ marginBottom: '20px' }}>
+        <Link to="/">← Back to Scoreboard</Link>
+      </nav>
+
+      <h1>Player Data: {entrantName}</h1>
       <Table columns={columns} data={dataArray} />
 
       <h2>Points & Points Multiplier Chart</h2>
@@ -185,4 +204,18 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+// Main App component with routes
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Scoreboard />} />
+          <Route path="/entrant/:entrantName" element={<EntrantDetail />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
