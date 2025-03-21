@@ -11,6 +11,10 @@ import {
   Legend
 } from 'recharts';
 
+// Base server URL
+const BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/';
+// const BASE_SERVER_URL_LOCAL = 'http://127.0.0.1:8000';
+
 // Table component using react-table
 function Table({ columns, data }) {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
@@ -86,7 +90,7 @@ function Scoreboard() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('https://mm-pp-app.onrender.com/pk/scoreboard')
+    fetch(`${BASE_SERVER_URL}/pk/scoreboard`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -156,6 +160,80 @@ function Scoreboard() {
     <div style={{ padding: '20px' }}>
       <h1>March Madness Scoreboard</h1>
       <Table columns={columns} data={scoreboardArray} />
+      <nav style={{ marginBottom: '20px' }}>
+        <Link to="/perfect-bracket" style={{ textDecoration: 'underline', color: 'blue' }}>
+          View "Perfect Bracket"
+        </Link>
+      </nav>
+    </div>
+  );
+}
+
+// New component for Perfect Bracket
+function PerfectBracket() {
+  const [bracketData, setBracketData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch(`${BASE_SERVER_URL}/perfect_bracket`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setBracketData(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err);
+        setLoading(false);
+      });
+  }, []);
+
+  const columns = useMemo(
+    () => [
+      {
+        Header: 'Rank',
+        accessor: 'rank',
+        id: 'rank',
+        Cell: ({ row }) => row.index + 1 // Display rank based on index
+      },
+      {
+        Header: 'Player',
+        accessor: 'player',
+      },
+      {
+        Header: 'Points w/ Multiplier',
+        accessor: 'pts_mult',
+      },
+      {
+        Header: 'Team',
+        accessor: 'team',
+      },
+      {
+        Header: 'Picked By',
+        accessor: 'entrants',
+        // Use Cell renderer to handle empty values
+        Cell: ({ value }) => (value ? value : '')
+      }
+    ],
+    []
+  );
+
+  if (loading) return <div>Loading perfect bracket data...</div>;
+  if (error) return <div>Error loading perfect bracket: {error.message}</div>;
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <nav style={{ marginBottom: '20px' }}>
+        <Link to="/">← Back to Scoreboard</Link>
+      </nav>
+      <h1>Perfect Bracket</h1>
+      <p>The top 15 players in the tournament and who picked them</p>
+      <Table columns={columns} data={bracketData} />
     </div>
   );
 }
@@ -168,7 +246,7 @@ function EntrantDetail() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`https://mm-pp-app.onrender.com/pk/entrant/${entrantName}`)
+    fetch(`${BASE_SERVER_URL}/pk/entrant/${entrantName}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -261,6 +339,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Scoreboard />} />
           <Route path="/entrant/:entrantName" element={<EntrantDetail />} />
+          <Route path="/perfect-bracket" element={<PerfectBracket />} />
         </Routes>
       </div>
     </Router>
