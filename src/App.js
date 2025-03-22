@@ -2,18 +2,21 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTable } from 'react-table';
 import { BrowserRouter as Router, Routes, Route, Link, useParams } from 'react-router-dom';
 import {
-  BarChart,
+  // BarChart,
+  Line,
+  ComposedChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend
+  Legend,
+  ResponsiveContainer
 } from 'recharts';
 
 // Base server URL
-const BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/';
-// const BASE_SERVER_URL_LOCAL = 'http://127.0.0.1:8000';
+// const BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/';
+const BASE_SERVER_URL = 'http://127.0.0.1:8000';
 
 // Table component using react-table
 function Table({ columns, data }) {
@@ -51,6 +54,7 @@ function Table({ columns, data }) {
           prepareRow(row);
           // Check if this player hasn't played yet
           const notPlayedYet = row.original.pts === 'Not played yet';
+          const alive = row.original.alive;
 
           return (
             <tr
@@ -59,6 +63,7 @@ function Table({ columns, data }) {
               style={{
                 // backgroundColor: notPlayedYet ? 'rgba(232, 232, 232, 0.57)' : 'white',
                 opacity: notPlayedYet ? 0.3 : 1,
+                backgroundColor: alive === 'No' ? '#ffebee' : 'white', // Light red background if eliminated
                 // color: notPlayedYet ? '#999999' : 'black',
               }}
             >
@@ -272,8 +277,17 @@ function EntrantDetail() {
           pts: info.pts === 'Not played yet' ? 'Not played yet' : info.pts.reduce((total, current) => total + current, 0),
           pts_mult: info.pts_mult,
           seed: info.seed,
-          team: info.team
-        }));
+          team: info.team,
+          alive: info.alive ? 'Yes' : 'No',
+        })).sort((a, b) => {
+          // Sort by alive first, then by name
+          if (a.alive === 'Yes' && b.alive === 'No') return -1;
+          if (a.alive === 'No' && b.alive === 'Yes') return 1;
+          if (a.pts_mult === 'Not played yet' && b.pts_mult === 'Not played yet') return 0;
+          if (a.pts_mult === 'Not played yet') return 1;
+          if (b.pts_mult === 'Not played yet') return -1;
+          return b.pts_mult - a.pts_mult || a.name.localeCompare(b.name);
+        });
         setDataArray(arrayData);
         setLoading(false);
       })
@@ -289,7 +303,10 @@ function EntrantDetail() {
       { Header: 'Points', accessor: 'pts' },
       { Header: 'Points w/ Multiplier', accessor: 'pts_mult' },
       { Header: 'Seed', accessor: 'seed' },
-      { Header: 'Team', accessor: 'team' }
+      { Header: 'Team', accessor: 'team' },
+      {
+        Header: "Alive?", accessor: 'alive'
+      },
     ],
     []
   );
@@ -305,7 +322,7 @@ function EntrantDetail() {
 
       <h1>Players: {entrantName}</h1>
       <Table columns={columns} data={dataArray} />
-
+      {/* 
       <h2>Points & Points Multiplier Chart</h2>
       <BarChart
         width={window.innerWidth - 50}
@@ -336,8 +353,105 @@ function EntrantDetail() {
         <Legend />
         <Bar dataKey="pts" name="Points" fill="#8884d8" />
         <Bar dataKey="pts_mult" name="Points w/ Multiplier" fill="#82ca9d" />
-      </BarChart>
+      </BarChart> */}
     </div >
+  );
+}
+
+// New component to display details for a specific player
+function PlayerDetail() {
+  const { playerName } = useParams(); // Get player name from URL params
+  const [playerData, setPlayerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch(`${BASE_SERVER_URL}/player/${encodeURIComponent(playerName)}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setPlayerData(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err);
+        setLoading(false);
+      });
+  }, [playerName]);
+
+  if (loading) return <div>Loading player data...</div>;
+  if (error) return <div>Error loading player data: {error.message}</div>;
+  if (!playerData) return <div>No data available for this player.</div>;
+
+  // Create data for round-by-round chart
+  const roundData = playerData.pts.map((points, index) => ({
+    round: `Round ${index + 1}`,
+    points: points,
+    pointsWithMultiplier: playerData.pts_mult_round[index] || 0,
+  }));
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <nav style={{ marginBottom: '20px' }}>
+        <Link to="/">← Back to Scoreboard</Link>
+      </nav>
+
+      <div className="player-header" style={{
+        background: playerData.alive ? '#f0f0f0' : '#ffebee', // Light red background if eliminated
+        padding: '15px',
+        borderRadius: '5px',
+        marginBottom: '20px'
+      }}>
+        <h1>{playerData.player}</h1>
+        <div style={{ display: 'flex', gap: '30px', marginTop: '10px' }}>
+          <div>
+            <strong>Team:</strong> {playerData.team}
+          </div>
+          <div>
+            <strong>Seed:</strong> {playerData.seed}
+          </div>
+          <div>
+            <strong>Status:</strong> <span style={{
+              color: playerData.alive ? 'green' : 'red',
+              fontWeight: 'bold'
+            }}>
+              {playerData.alive ? 'Still Alive' : 'Eliminated'}
+            </span>
+          </div>
+          <div>
+            <strong>Total Points:</strong> {playerData.pts.reduce((sum, p) => sum + p, 0)}
+          </div>
+          <div>
+            <strong>Total Points w/ Multiplier:</strong> {playerData.pts_mult}
+          </div>
+        </div>
+      </div>
+
+      <h2>Round-by-Round Performance</h2>
+      <ResponsiveContainer width={'70%'} height={400}>
+        <ComposedChart
+          width={window.innerWidth - 50}
+          height={400}
+          data={roundData}
+          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="round" />
+          <YAxis />
+          <Tooltip
+            formatter={(value, name) => [value, name]}
+            labelFormatter={(label) => label}
+          />
+          <Legend />
+          <Bar dataKey="points" name="Points" fill="#8884d8" barSize={30} />
+          <Line dataKey="pointsWithMultiplier" name="Points w/ Multiplier" fill="#82ca9d" />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -349,7 +463,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Scoreboard />} />
           <Route path="/entrant/:entrantName" element={<EntrantDetail />} />
+          <Route path="/player/:playerName" element={<PlayerDetail />} />
           <Route path="/perfect-bracket" element={<PerfectBracket />} />
+          <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
       </div>
     </Router>
