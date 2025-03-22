@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 
 // Base server URL
-const BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/';
+const BASE_SERVER_URL = 'https://mm-pp-app.onrender.com';
 // const BASE_SERVER_URL_LOCAL = 'http://127.0.0.1:8000';
 
 // Table component using react-table
