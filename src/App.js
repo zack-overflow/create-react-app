@@ -134,6 +134,14 @@ function Scoreboard() {
         Header: "Players Alive",
         accessor: 'alive_count',
 
+      },
+      {
+        Header: "Projected Sum Games Remaining After R64",
+        accessor: 'sum_games_projected'
+      },
+      {
+        Header: "Projected Sum Games Remaining w/ Multiplier After R64",
+        accessor: 'sum_games_projected_multiplier'
       }
     ],
     []
@@ -148,6 +156,8 @@ function Scoreboard() {
         score: stats.score || 0,
         sum_multiplier: stats.sum_multiplier || 0,
         alive_count: stats.alive_count || 0,
+        sum_games_projected: stats.sum_games_projected || 0,
+        sum_games_projected_multiplier: stats.sum_games_projected_multiplier || 0,
       }))
       .sort((a, b) => b.score - a.score); // Sort by score in descending order
   }, [scoreboardData]);
