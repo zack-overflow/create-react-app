@@ -15,8 +15,8 @@ import {
 } from 'recharts';
 
 // Base server URL
-// const BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/';
-const BASE_SERVER_URL = 'http://127.0.0.1:8000';
+const BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/';
+// const BASE_SERVER_URL = 'http://127.0.0.1:8000';
 
 // Table component using react-table
 function Table({ columns, data }) {
