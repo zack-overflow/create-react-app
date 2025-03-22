@@ -90,7 +90,7 @@ function Scoreboard() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${BASE_SERVER_URL}/pk/scoreboard`)
+    fetch(`${BASE_SERVER_URL}/scoreboard`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -176,7 +176,7 @@ function PerfectBracket() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${BASE_SERVER_URL}/perfect_bracket`)
+    fetch(`${BASE_SERVER_URL}/nk/perfect_bracket`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -246,7 +246,7 @@ function EntrantDetail() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${BASE_SERVER_URL}/pk/entrant/${entrantName}`)
+    fetch(`${BASE_SERVER_URL}/entrant/${entrantName}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
