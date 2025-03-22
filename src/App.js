@@ -299,7 +299,18 @@ function EntrantDetail() {
 
   const columns = useMemo(
     () => [
-      { Header: 'Name', accessor: 'name' },
+      {
+        Header: 'Name', accessor: 'name',
+        Cell: ({ value }) => {
+          // turn spaces into dashes for the URL
+          const urlName = value.replace(/\s+/g, '-');
+          return (
+            <Link to={`/player/${urlName}`} style={{ textDecoration: 'underline', color: 'blue' }}>
+              {value}
+            </Link>
+          );
+        }
+      },
       { Header: 'Points', accessor: 'pts' },
       { Header: 'Points w/ Multiplier', accessor: 'pts_mult' },
       { Header: 'Seed', accessor: 'seed' },
