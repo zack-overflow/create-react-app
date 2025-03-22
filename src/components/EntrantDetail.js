@@ -10,7 +10,7 @@ function EntrantDetail() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetch(`${BASE_SERVER_URL}/pk/entrant/${entrantName}`)
+        fetch(`${BASE_SERVER_URL}/entrant/${entrantName}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

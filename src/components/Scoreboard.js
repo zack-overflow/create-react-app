@@ -11,7 +11,7 @@ function Scoreboard() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetch(`${BASE_SERVER_URL}/pk/scoreboard`)
+        fetch(`${BASE_SERVER_URL}/scoreboard`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
