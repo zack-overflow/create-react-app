@@ -1,11 +1,12 @@
 // Base server URL
+
+const url = window.location.origin;
+
 let BASE_SERVER_URL;
 
-console.log('PIKAP:', process.env.PIKAP);)
-
-if (process.env.PIKAP === false) {
+if (url === 'https://mm-pp-frontend.onrender.com') {
     BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/';
-} else if (process.env.PIKAP === true) {
+} else if (url === 'https://pikap-march-madness.onrender.com/') {
     BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/pk';
 } else {
     BASE_SERVER_URL = 'http://127.0.0.1:8000';
