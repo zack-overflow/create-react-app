@@ -1,6 +1,8 @@
 // Base server URL
 let BASE_SERVER_URL;
 
+console.log('PIKAP:', process.env.PIKAP);)
+
 if (process.env.PIKAP === false) {
     BASE_SERVER_URL = 'https://mm-pp-app.onrender.com/';
 } else if (process.env.PIKAP === true) {
