@@ -32,7 +32,7 @@ function Scoreboard() {
     const columns = useMemo(
         () => [
             {
-                Header: 'Guy (click for details)',
+                Header: 'Entrant (click name for details)',
                 accessor: 'entrantName',
                 // Custom cell renderer to make the entrant name a clickable link
                 Cell: ({ value }) => (
@@ -57,11 +57,11 @@ function Scoreboard() {
 
             },
             {
-                Header: "Projected Sum Games Remaining After R64",
+                Header: "Projected Sum Games Remaining After R32",
                 accessor: 'sum_games_projected'
             },
             {
-                Header: "Projected Sum Games Remaining w/ Multiplier After R64",
+                Header: "Projected Sum Games Remaining w/ Multiplier After R32",
                 accessor: 'sum_games_projected_multiplier'
             }
         ],
